@@ -47,7 +47,7 @@ export const register = catchAsync(async (req, res) => {
   delete userData.refreshToken;
   delete userData.verificationToken;
 
-  return successResponse(res, 'Registration successful', { user: userData, accessToken }, 201);
+  return successResponse(res, 'Registration successful', { user: userData, accessToken, refreshToken }, 201);
 });
 
 export const login = catchAsync(async (req, res) => {
@@ -74,7 +74,7 @@ export const login = catchAsync(async (req, res) => {
   delete userData.password;
   delete userData.refreshToken;
 
-  return successResponse(res, 'Login successful', { user: userData, accessToken });
+  return successResponse(res, 'Login successful', { user: userData, accessToken, refreshToken });
 });
 
 export const logout = catchAsync(async (req, res) => {
@@ -151,7 +151,7 @@ export const refreshToken = catchAsync(async (req, res) => {
   await user.save({ validateBeforeSave: false });
   setTokenCookies(res, accessToken, newRefreshToken);
 
-  return successResponse(res, 'Token refreshed', { accessToken });
+  return successResponse(res, 'Token refreshed', { accessToken, refreshToken: newRefreshToken });
 });
 
 export const getMe = catchAsync(async (req, res) => {

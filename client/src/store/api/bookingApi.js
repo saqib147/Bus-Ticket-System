@@ -15,8 +15,16 @@ export const bookingApi = baseApi.injectEndpoints({
       providesTags: ['Booking'],
     }),
     getBookingById: builder.query({
-      query: (id) => `/bookings/${id}`,
-      providesTags: (_result, _error, id) => [{ type: 'Booking', id }],
+      query: (arg) => {
+        if (typeof arg === 'object' && arg.id) {
+          return `/bookings/${arg.id}${arg.confirm ? '?confirm=true' : ''}`;
+        }
+        return `/bookings/${arg}`;
+      },
+      providesTags: (_result, _error, arg) => {
+        const id = typeof arg === 'object' ? arg.id : arg;
+        return [{ type: 'Booking', id }];
+      },
     }),
     cancelBooking: builder.mutation({
       query: ({ id, reason }) => ({

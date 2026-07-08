@@ -27,20 +27,26 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
+        const refreshToken = localStorage.getItem('refreshToken');
         const refreshResponse = await axios.post(
           `${API_URL}/auth/refresh-token`,
-          {},
+          { refreshToken },
           { withCredentials: true }
         );
 
         const newToken = refreshResponse.data?.data?.accessToken;
+        const newRefreshToken = refreshResponse.data?.data?.refreshToken;
         if (newToken) {
           localStorage.setItem('accessToken', newToken);
+          if (newRefreshToken) {
+            localStorage.setItem('refreshToken', newRefreshToken);
+          }
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         }
       } catch {
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       }
     }
 

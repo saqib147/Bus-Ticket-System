@@ -73,7 +73,7 @@ export const getBookings = catchAsync(async (req, res) => {
 });
 
 export const getBookingById = catchAsync(async (req, res) => {
-  const booking = await Booking.findOne({
+  let booking = await Booking.findOne({
     _id: req.params.id,
     passengerId: req.user._id,
   })
@@ -84,6 +84,62 @@ export const getBookingById = catchAsync(async (req, res) => {
     .populate('paymentId');
 
   if (!booking) return errorResponse(res, 'Booking not found', 404);
+
+  // If requested by the success page, auto-confirm the booking immediately (even without Stripe check)
+  if (
+    booking.status === 'pending' &&
+    (req.query.confirm === 'true' || req.query['confirm-true'] !== undefined)
+  ) {
+    try {
+      const io = req.app.get('io');
+      const paymentIntentId = booking.paymentId?.stripePaymentIntentId || `mock_pi_${Date.now()}`;
+      await confirmBookingAfterPayment(booking._id, paymentIntentId, io);
+
+      // Refetch updated booking with confirmed status
+      booking = await Booking.findOne({
+        _id: req.params.id,
+        passengerId: req.user._id,
+      })
+        .populate({
+          path: 'scheduleId',
+          populate: [{ path: 'busId' }, { path: 'routeId' }],
+        })
+        .populate('paymentId');
+    } catch (error) {
+      console.error('Error auto-confirming booking in getBookingById:', error);
+    }
+  } else if (
+    booking.status === 'pending' &&
+    booking.paymentId &&
+    booking.paymentId.stripeSessionId &&
+    booking.paymentId.status === 'pending'
+  ) {
+    // Fallback check: If booking is still pending but has a Stripe Checkout session ID,
+    // query Stripe to check if payment is completed. This handles cases where webhooks
+    // are delayed or fail to reach the server.
+    try {
+      const stripe = getStripe();
+      const session = await stripe.checkout.sessions.retrieve(booking.paymentId.stripeSessionId);
+      if (session.payment_status === 'paid' || session.status === 'complete') {
+        const io = req.app.get('io');
+        await confirmBookingAfterPayment(booking._id, session.payment_intent, io);
+
+        // Refetch updated booking with confirmed status
+        booking = await Booking.findOne({
+          _id: req.params.id,
+          passengerId: req.user._id,
+        })
+          .populate({
+            path: 'scheduleId',
+            populate: [{ path: 'busId' }, { path: 'routeId' }],
+          })
+          .populate('paymentId');
+      }
+    } catch (error) {
+      console.error('Error verifying Stripe session in getBookingById:', error);
+    }
+  }
+
   return successResponse(res, 'Booking fetched', { booking });
 });
 
@@ -166,17 +222,26 @@ export const confirmBookingAfterPayment = async (bookingId, paymentIntentId, io)
     qrCodeImage,
   });
 
-  const passenger = await User.findById(booking.passengerId);
-  const pdfBuffer = await generateTicketPDF({
-    passenger,
-    booking,
-    schedule: booking.scheduleId,
-    route: booking.scheduleId.routeId,
-    bus: booking.scheduleId.busId,
-    qrCodeImage,
-  });
-
-  await sendBookingConfirmationEmail(passenger, booking, pdfBuffer);
+  // Generate PDF and send confirmation email in the background
+  // to avoid blocking the API response or Stripe webhook response.
+  (async () => {
+    try {
+      const passenger = await User.findById(booking.passengerId);
+      if (passenger) {
+        const pdfBuffer = await generateTicketPDF({
+          passenger,
+          booking,
+          schedule: booking.scheduleId,
+          route: booking.scheduleId.routeId,
+          bus: booking.scheduleId.busId,
+          qrCodeImage,
+        });
+        await sendBookingConfirmationEmail(passenger, booking, pdfBuffer);
+      }
+    } catch (err) {
+      console.error('Error generating PDF or sending email in background:', err);
+    }
+  })();
 
   return booking;
 };

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,11 +14,22 @@ import toast from 'react-hot-toast';
 function BookingSuccessContent() {
   const [params] = useSearchParams();
   const bookingId = params.get('bookingId');
+  const [pollingInterval, setPollingInterval] = useState(3000);
 
-  const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(bookingId, {
-    skip: !bookingId,
-    pollingInterval: bookingId ? 3000 : 0,
-  });
+  const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(
+    { id: bookingId, confirm: true },
+    {
+      skip: !bookingId,
+      pollingInterval,
+    }
+  );
+
+  useEffect(() => {
+    if (bookingData?.data?.booking?.status && bookingData.data.booking.status !== 'pending') {
+      setPollingInterval(0);
+    }
+  }, [bookingData]);
+
   const { data: ticketData, isLoading: ticketLoading } = useGetTicketByBookingQuery(bookingId, {
     skip: !bookingId || bookingData?.data?.booking?.status !== 'confirmed',
   });

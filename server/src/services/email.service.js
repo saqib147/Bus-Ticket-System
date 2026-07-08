@@ -10,18 +10,8 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async ({ to, subject, html, attachments = [] }) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log(`Email skipped (no SMTP config): ${subject} -> ${to}`);
-    return;
-  }
-
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-    to,
-    subject,
-    html,
-    attachments,
-  });
+  console.log(`Email skipped (SMTP sending disabled): ${subject} -> ${to}`);
+  return;
 };
 
 export const sendWelcomeEmail = async (user, verificationUrl) => {

@@ -43,14 +43,14 @@ export default function AdminLoginPage() {
   const onSubmit = async (data) => {
     try {
       const result = await login(data).unwrap();
-      const { user, accessToken } = result.data;
+      const { user, accessToken, refreshToken } = result.data;
 
       if (user.role !== 'admin' && user.role !== 'operator') {
         toast.error('Access denied. Admin or operator account required.');
         return;
       }
 
-      dispatch(setCredentials({ user, accessToken }));
+      dispatch(setCredentials({ user, accessToken, refreshToken }));
       setAuthToken(accessToken);
 
       if (user.role === 'operator' && user.operatorStatus === 'pending') {

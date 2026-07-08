@@ -18,17 +18,26 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error?.status === 401) {
+    const refreshToken = localStorage.getItem('refreshToken');
     const refreshResult = await baseQuery(
-      { url: '/auth/refresh-token', method: 'POST' },
+      {
+        url: '/auth/refresh-token',
+        method: 'POST',
+        body: { refreshToken },
+      },
       api,
       extraOptions
     );
 
     if (refreshResult.data?.data?.accessToken) {
       localStorage.setItem('accessToken', refreshResult.data.data.accessToken);
+      if (refreshResult.data.data.refreshToken) {
+        localStorage.setItem('refreshToken', refreshResult.data.data.refreshToken);
+      }
       result = await baseQuery(args, api, extraOptions);
     } else {
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     }
   }
 

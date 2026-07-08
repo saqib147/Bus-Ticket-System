@@ -13,11 +13,14 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { user, accessToken } = action.payload;
+      const { user, accessToken, refreshToken } = action.payload;
       state.user = user;
       state.accessToken = accessToken;
       state.isAuthenticated = true;
       localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
       localStorage.setItem('user', JSON.stringify(user));
     },
     logout: (state) => {
@@ -25,6 +28,7 @@ const authSlice = createSlice({
       state.accessToken = null;
       state.isAuthenticated = false;
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
     },
     updateUser: (state, action) => {
@@ -43,6 +47,9 @@ const authSlice = createSlice({
         state.accessToken = payload.data.accessToken;
         state.isAuthenticated = true;
         localStorage.setItem('accessToken', payload.data.accessToken);
+        if (payload.data.refreshToken) {
+          localStorage.setItem('refreshToken', payload.data.refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(user));
       })
       .addMatcher(authApi.endpoints.register.matchFulfilled, (state, { payload }) => {
@@ -50,6 +57,9 @@ const authSlice = createSlice({
         state.accessToken = payload.data.accessToken;
         state.isAuthenticated = true;
         localStorage.setItem('accessToken', payload.data.accessToken);
+        if (payload.data.refreshToken) {
+          localStorage.setItem('refreshToken', payload.data.refreshToken);
+        }
         localStorage.setItem('user', JSON.stringify(payload.data.user));
       })
       .addMatcher(authApi.endpoints.getMe.matchFulfilled, (state, { payload }) => {
@@ -62,6 +72,7 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.isAuthenticated = false;
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
       });
   },

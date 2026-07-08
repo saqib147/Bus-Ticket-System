@@ -28,7 +28,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: [process.env.CLIENT_URL, process.env.ADMIN_URL],
+    origin: "*",
     credentials: true,
   },
 });
@@ -41,6 +41,10 @@ connectDB();
 app.use(helmet());
 app.use(
   cors({
+    // Allow all origins. Using `origin: true` reflects the request origin
+    // in the `Access-Control-Allow-Origin` header. Keep `credentials: true`
+    // if you need to send cookies; note this will not set `*` when
+    // credentials are enabled.
     origin: true,
     credentials: true,
   })
@@ -49,14 +53,14 @@ app.use(compression());
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use((req, res, next) => {
-  if (req.originalUrl === '/api/v1/payments/webhook') {
+  if (req.originalUrl.startsWith('/api/v1/payments/webhook')) {
     express.raw({ type: 'application/json' })(req, res, next);
   } else {
     next();
   }
 });
 app.use((req, res, next) => {
-  if (req.originalUrl === '/api/v1/payments/webhook') {
+  if (req.originalUrl.startsWith('/api/v1/payments/webhook')) {
     next();
   } else {
     express.json({ limit: '10mb' })(req, res, next);

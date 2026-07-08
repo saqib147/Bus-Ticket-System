@@ -15,12 +15,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      const { user, accessToken } = action.payload;
+      const { user, accessToken, refreshToken } = action.payload;
       state.user = user;
       state.accessToken = accessToken;
       state.isAuthenticated = true;
       localStorage.setItem('busgo_admin_user', JSON.stringify(user));
       localStorage.setItem('busgo_admin_token', accessToken);
+      if (refreshToken) {
+        localStorage.setItem('busgo_admin_refresh_token', refreshToken);
+      }
     },
     setUser: (state, action) => {
       state.user = action.payload;
@@ -32,6 +35,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem('busgo_admin_user');
       localStorage.removeItem('busgo_admin_token');
+      localStorage.removeItem('busgo_admin_refresh_token');
     },
     setLoading: (state, action) => {
       state.isLoading = action.payload;

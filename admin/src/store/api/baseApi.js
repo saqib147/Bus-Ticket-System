@@ -18,8 +18,13 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
   if (result.error?.status === 401) {
+    const refreshToken = localStorage.getItem('busgo_admin_refresh_token');
     const refreshResult = await baseQuery(
-      { url: '/auth/refresh-token', method: 'POST' },
+      {
+        url: '/auth/refresh-token',
+        method: 'POST',
+        body: { refreshToken },
+      },
       api,
       extraOptions
     );
@@ -30,6 +35,7 @@ export const baseQueryWithReauth = async (args, api, extraOptions) => {
         setCredentials({
           user: api.getState().auth.user,
           accessToken: refreshResult.data.data.accessToken,
+          refreshToken: refreshResult.data.data.refreshToken,
         })
       );
       result = await baseQuery(args, api, extraOptions);
