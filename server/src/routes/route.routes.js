@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { verifyToken, optionalAuth } from '../middleware/auth.middleware.js';
-import { isAdminOrOperator } from '../middleware/role.middleware.js';
+import { isAdmin } from '../middleware/role.middleware.js';
 import {
   getRoutes,
   createRoute,
@@ -11,8 +11,8 @@ import {
 const router = Router();
 
 router.get('/', optionalAuth, getRoutes);
-router.post('/', verifyToken, isAdminOrOperator, createRoute);
-router.patch('/:id', verifyToken, isAdminOrOperator, updateRoute);
-router.delete('/:id', verifyToken, isAdminOrOperator, deleteRoute);
+router.post('/', verifyToken, isAdmin, createRoute);
+router.patch('/:id', verifyToken, isAdmin, updateRoute);
+router.delete('/:id', verifyToken, isAdmin, deleteRoute);
 
 export default router;

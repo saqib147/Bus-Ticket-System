@@ -39,7 +39,7 @@ export default router;
 
 const operatorRouter = Router();
 operatorRouter.get('/stats', verifyToken, isOperator, getOperatorStats);
-operatorRouter.get('/schedules/:id/passengers', verifyToken, isOperator, getSchedulePassengers);
+operatorRouter.get('/schedules/:id/passengers', verifyToken, isAdminOrOperator, getSchedulePassengers);
 operatorRouter.get('/reports/revenue', verifyToken, isOperator, getOperatorRevenueReport);
 operatorRouter.get('/bookings', verifyToken, isAdminOrOperator, getAllBookings);
 

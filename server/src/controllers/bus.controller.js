@@ -77,9 +77,10 @@ export const createBus = catchAsync(async (req, res) => {
     }
   }
 
+  const operatorId = req.user.role === 'admin' ? (req.body.operatorId || req.user._id) : req.user._id;
   const bus = await Bus.create({
     ...req.body,
-    operatorId: req.user._id,
+    operatorId,
     photos,
     seatLayout: typeof req.body.seatLayout === 'string'
       ? JSON.parse(req.body.seatLayout)
@@ -93,7 +94,8 @@ export const createBus = catchAsync(async (req, res) => {
 });
 
 export const updateBus = catchAsync(async (req, res) => {
-  const bus = await Bus.findOne({ _id: req.params.id, operatorId: req.user._id });
+  const query = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, operatorId: req.user._id };
+  const bus = await Bus.findOne(query);
   if (!bus) return errorResponse(res, 'Bus not found', 404);
 
   const updates = { ...req.body };
@@ -122,8 +124,9 @@ export const updateBus = catchAsync(async (req, res) => {
 });
 
 export const deleteBus = catchAsync(async (req, res) => {
+  const query = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, operatorId: req.user._id };
   const bus = await Bus.findOneAndUpdate(
-    { _id: req.params.id, operatorId: req.user._id },
+    query,
     { isActive: false },
     { new: true }
   );
@@ -132,6 +135,7 @@ export const deleteBus = catchAsync(async (req, res) => {
 });
 
 export const getMyBuses = catchAsync(async (req, res) => {
-  const buses = await Bus.find({ operatorId: req.user._id }).sort({ createdAt: -1 });
+  const query = req.user.role === 'admin' ? {} : { operatorId: req.user._id };
+  const buses = await Bus.find(query).populate('operatorId', 'name email').sort({ createdAt: -1 });
   return successResponse(res, 'Buses fetched', { buses });
 });

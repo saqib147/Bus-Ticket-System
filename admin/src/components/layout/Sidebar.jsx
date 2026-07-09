@@ -27,7 +27,9 @@ const adminNav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/users', label: 'Users', icon: Users },
   { to: '/operators', label: 'Operators', icon: UserCog },
+  { to: '/buses', label: 'Buses', icon: Bus },
   { to: '/routes', label: 'Routes', icon: Route },
+  { to: '/schedules', label: 'Schedules', icon: Calendar },
   { to: '/bookings', label: 'Bookings', icon: Ticket },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
@@ -39,7 +41,6 @@ const operatorNav = [
   { to: '/routes', label: 'Routes', icon: Route },
   { to: '/schedules', label: 'Schedules', icon: Calendar },
   { to: '/bookings', label: 'Bookings', icon: Ticket },
-  { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 

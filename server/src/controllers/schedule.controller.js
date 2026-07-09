@@ -60,12 +60,13 @@ export const getScheduleById = catchAsync(async (req, res) => {
 });
 
 export const createSchedule = catchAsync(async (req, res) => {
-  const bus = await Bus.findOne({ _id: req.body.busId, operatorId: req.user._id });
+  const busQuery = req.user.role === 'admin' ? { _id: req.body.busId } : { _id: req.body.busId, operatorId: req.user._id };
+  const bus = await Bus.findOne(busQuery);
   if (!bus) return errorResponse(res, 'Bus not found', 404);
 
   const schedule = await Schedule.create({
     ...req.body,
-    operatorId: req.user._id,
+    operatorId: req.user.role === 'admin' ? bus.operatorId : req.user._id,
     availableSeats: bus.totalSeats,
   });
 
@@ -79,7 +80,8 @@ export const createSchedule = catchAsync(async (req, res) => {
 });
 
 export const updateSchedule = catchAsync(async (req, res) => {
-  const schedule = await Schedule.findOne({ _id: req.params.id, operatorId: req.user._id });
+  const scheduleQuery = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, operatorId: req.user._id };
+  const schedule = await Schedule.findOne(scheduleQuery);
   if (!schedule) return errorResponse(res, 'Schedule not found', 404);
 
   Object.assign(schedule, req.body);
@@ -93,8 +95,9 @@ export const updateSchedule = catchAsync(async (req, res) => {
 });
 
 export const deleteSchedule = catchAsync(async (req, res) => {
+  const scheduleQuery = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, operatorId: req.user._id };
   const schedule = await Schedule.findOneAndUpdate(
-    { _id: req.params.id, operatorId: req.user._id },
+    scheduleQuery,
     { status: 'cancelled' },
     { new: true }
   );
@@ -103,10 +106,8 @@ export const deleteSchedule = catchAsync(async (req, res) => {
 });
 
 export const getSchedulePassengers = catchAsync(async (req, res) => {
-  const schedule = await Schedule.findOne({
-    _id: req.params.id,
-    operatorId: req.user._id,
-  }).populate('routeId');
+  const scheduleQuery = req.user.role === 'admin' ? { _id: req.params.id } : { _id: req.params.id, operatorId: req.user._id };
+  const schedule = await Schedule.findOne(scheduleQuery).populate('routeId');
 
   if (!schedule) return errorResponse(res, 'Schedule not found', 404);
 

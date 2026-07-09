@@ -106,6 +106,12 @@ export const getAllBookings = catchAsync(async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
 
+  if (req.user?.role === 'operator') {
+    const schedules = await Schedule.find({ operatorId: req.user._id }).select('_id');
+    const scheduleIds = schedules.map((s) => s._id);
+    filter.scheduleId = { $in: scheduleIds };
+  }
+
   const bookings = await Booking.find(filter)
     .populate('passengerId', 'name email phone')
     .populate({

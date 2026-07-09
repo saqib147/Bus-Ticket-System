@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/store/slices/authSlice';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -55,6 +57,9 @@ const statusVariant = {
 };
 
 export default function ScheduleManagementPage() {
+  const user = useSelector(selectCurrentUser);
+  const isAdmin = user?.role === 'admin';
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
 
@@ -149,10 +154,12 @@ export default function ScheduleManagementPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Manage Schedules</h2>
-        <Button onClick={openCreate} disabled={!buses.length || !routes.length}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Schedule
-        </Button>
+        {isAdmin && (
+          <Button onClick={openCreate} disabled={!buses.length || !routes.length}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Schedule
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -177,7 +184,7 @@ export default function ScheduleManagementPage() {
                   <TableHead>Fare</TableHead>
                   <TableHead>Seats</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  {isAdmin && <TableHead>Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -198,28 +205,30 @@ export default function ScheduleManagementPage() {
                         {schedule.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => openEdit(schedule)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        {schedule.status !== 'cancelled' && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={deleting}
-                            onClick={() => handleDelete(schedule._id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
+                    {isAdmin && (
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => openEdit(schedule)}>
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
+                          {schedule.status !== 'cancelled' && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={deleting}
+                              onClick={() => handleDelete(schedule._id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
                 {schedules.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={isAdmin ? 8 : 7} className="text-center text-muted-foreground">
                       No schedules yet. Add your first schedule.
                     </TableCell>
                   </TableRow>

@@ -190,10 +190,12 @@ export default function RouteManagementPage() {
               : 'Create and manage routes for your fleet'}
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Route
-        </Button>
+        {isAdmin && (
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Route
+          </Button>
+        )}
       </div>
 
       {isAdmin && (
@@ -242,7 +244,7 @@ export default function RouteManagementPage() {
                   <TableHead>Duration</TableHead>
                   <TableHead>Stops</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  {isAdmin && <TableHead>Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -266,22 +268,22 @@ export default function RouteManagementPage() {
                         {route.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => openEdit(route)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        {route.isActive ? (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            disabled={deleting}
-                            onClick={() => handleDelete(route._id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
+                    {isAdmin && (
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => openEdit(route)}>
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                        ) : (
-                          isAdmin && (
+                          {route.isActive ? (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={deleting}
+                              onClick={() => handleDelete(route._id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          ) : (
                             <Button
                               size="sm"
                               variant="outline"
@@ -289,16 +291,16 @@ export default function RouteManagementPage() {
                             >
                               Reactivate
                             </Button>
-                          )
-                        )}
-                      </div>
-                    </TableCell>
+                          )}
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
                 {routes.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={isAdmin ? 7 : 6}
+                      colSpan={isAdmin ? 7 : 5}
                       className="text-center text-muted-foreground py-8"
                     >
                       No routes found. Add your first route to get started.

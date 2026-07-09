@@ -22,7 +22,7 @@ function AuthRedirect({ children }) {
   return children;
 }
 
-function OperatorOnlyRoute({ children }) {
+function OperatorOrAdminRoute({ children }) {
   const user = useSelector(selectCurrentUser);
   if (user?.role === 'operator' && user?.operatorStatus !== 'approved') {
     return <Navigate to="/dashboard" replace />;
@@ -73,10 +73,10 @@ export default function App() {
         <Route
           path="/buses"
           element={
-            <ProtectedRoute roles={['operator']}>
-              <OperatorOnlyRoute>
+            <ProtectedRoute roles={['admin', 'operator']}>
+              <OperatorOrAdminRoute>
                 <BusManagementPage />
-              </OperatorOnlyRoute>
+              </OperatorOrAdminRoute>
             </ProtectedRoute>
           }
         />
@@ -84,25 +84,32 @@ export default function App() {
           path="/routes"
           element={
             <ProtectedRoute roles={['admin', 'operator']}>
-              <OperatorOnlyRoute>
+              <OperatorOrAdminRoute>
                 <RouteManagementPage />
-              </OperatorOnlyRoute>
+              </OperatorOrAdminRoute>
             </ProtectedRoute>
           }
         />
         <Route
           path="/schedules"
           element={
-            <ProtectedRoute roles={['operator']}>
-              <OperatorOnlyRoute>
+            <ProtectedRoute roles={['admin', 'operator']}>
+              <OperatorOrAdminRoute>
                 <ScheduleManagementPage />
-              </OperatorOnlyRoute>
+              </OperatorOrAdminRoute>
             </ProtectedRoute>
           }
         />
 
         <Route path="/bookings" element={<BookingsPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
